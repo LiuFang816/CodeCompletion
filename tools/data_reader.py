@@ -46,7 +46,7 @@ def _file_to_word_ids(filename, word_to_id, max_length=None, max_data_row=None):
 
 
 def raw_data(max_data_row,data_path=None, word_to_id=None, max_length=None):
-    train_path = os.path.join(data_path,"c/small_train.txt")
+    train_path = os.path.join(data_path,"c/train.txt")
     val_path=os.path.join(data_path,'c/val.txt')
     test_path = os.path.join(data_path, "c/test.txt")
 
