@@ -87,7 +87,7 @@ def train(id_to_word):
                     msg='Iter:{0:>6}, Train Loss:{1:>6.2}, Train Acc:{2:>7.2%},' \
                         'Val Loss:{3:>6.2}, Val Acc:{4:>7.2%}, Time:{5} {6}'
                     print(msg.format(total_batch,loss,acc,loss_val,acc_val,time_dif,improved_str))
-                    for i in range(config.batch_size):
+                    for i in range(2):#print 2 个example （≤batch_size）
                         input_=''
                         target_=''
                         predic_=''

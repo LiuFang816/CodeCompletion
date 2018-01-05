@@ -6,7 +6,7 @@ class LSTMConfig(object):
     num_layers=2
     num_steps=400
     hidden_size=256
-    dropout_keep_prob=0.8
+    dropout_keep_prob=1.0
     learning_rate=0.01
     batch_size=64
     num_epochs=50
@@ -36,6 +36,7 @@ class LSTM(object):
         with tf.device('/cpu:0'):
             embedding=tf.get_variable('embedding',[self.config.vocab_size,self.config.embedding_size])
             embedding_inputs=tf.nn.embedding_lookup(embedding,self.input)
+            embedding_inputs=tf.nn.dropout(embedding_inputs,0.8)
         with tf.name_scope('rnn'):
             cells=[drop_out() for _ in range(self.config.num_layers)]
             rnn_cell=tf.contrib.rnn.MultiRNNCell(cells,state_is_tuple=True)
