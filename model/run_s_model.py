@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 import os
-from model.LSTM import *
+from model.SLSTM import *
 from tools import data_reader
 import time
 from datetime import timedelta
@@ -40,7 +40,7 @@ def evaluate(sess,x_,y_):
         total_acc+=acc*batch_len
     return total_loss/data_len,total_acc/data_len
 
-def train():
+def train(id_to_word):
     tensorboard_dir=flags.tensorboard_dir
     if not os.path.exists(tensorboard_dir):
         os.makedirs(tensorboard_dir)
@@ -73,7 +73,8 @@ def train():
                     s=sess.run(merged_summary,feed_dict=feed_dict)
                     writer.add_summary(s,total_batch)
                 if total_batch%config.print_per_batch==0:
-                    loss,acc=sess.run([model.loss,model.acc],feed_dict=feed_dict)
+
+                    loss,acc,prediction=sess.run([model.loss,model.acc,model.predict_class],feed_dict=feed_dict)
                     loss_val,acc_val=evaluate(sess,val_inputs,val_labels)
                     if acc_val>best_eval_acc:
                         best_eval_acc=acc_val
@@ -86,6 +87,16 @@ def train():
                     msg='Iter:{0:>6}, Train Loss:{1:>6.2}, Train Acc:{2:>7.2%},' \
                         'Val Loss:{3:>6.2}, Val Acc:{4:>7.2%}, Time:{5} {6}'
                     print(msg.format(total_batch,loss,acc,loss_val,acc_val,time_dif,improved_str))
+                    for i in range(config.batch_size):
+                        input_=''
+                        target_=''
+                        predic_=''
+                        for j in range(config.num_steps-1):
+                            input_+=id_to_word[x_batch[i][j]]+' '
+                            target_+=id_to_word[y_batch[i][j]]+' '
+                            predic_+=id_to_word[prediction[i][j]]+' '
+                        print('input:   %s\n\nTarget:   %s\n\nPrediction: %s \n\n'%(input_,target_,predic_))
+
                 sess.run(model._train_op,feed_dict=feed_dict)
                 total_batch+=1
 
@@ -101,12 +112,14 @@ def test():
 if __name__ == '__main__':
     config=LSTMConfig()
     word_to_id=data_reader._build_vocab(os.path.join(flags.data_path,"c/train.txt"),config.vocab_size)
-    model=LSTM(config)
+
     train_data,val_data,test_data,vocabulary_size, end_id, left_id, right_id, PAD_ID=data_reader.raw_data(None,data_path=flags.data_path, word_to_id=word_to_id, max_length=config.num_steps)
     train_inputs,train_labels=data_reader.get_pair(train_data)
     val_inputs,val_labels=data_reader.get_pair(val_data)
     test_inputs,test_labels=data_reader.get_pair(test_data)
+    model=StackLSTM(config,left_id, right_id)
+    id_to_word=data_reader.reverseDic(word_to_id)
     if MODE=='train':
-        train()
+        train(id_to_word)
     else:
         test()

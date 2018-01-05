@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 class LSTMConfig(object):
-    embedding_size=64
+    embedding_size=256
     vocab_size=5000
-    num_layer=1
+    num_layers=2
     num_steps=400
-    hidden_size=64
+    hidden_size=256
     dropout_keep_prob=0.8
     learning_rate=0.01
-    batch_size=1
+    batch_size=64
     num_epochs=50
-    print_per_batch=1
-    save_per_batch=1
+    print_per_batch=100
+    save_per_batch=50
     max_grad_norm=5
     rnn='lstm'
 
@@ -37,7 +37,7 @@ class LSTM(object):
             embedding=tf.get_variable('embedding',[self.config.vocab_size,self.config.embedding_size])
             embedding_inputs=tf.nn.embedding_lookup(embedding,self.input)
         with tf.name_scope('rnn'):
-            cells=[drop_out() for _ in range(self.config.num_layer)]
+            cells=[drop_out() for _ in range(self.config.num_layers)]
             rnn_cell=tf.contrib.rnn.MultiRNNCell(cells,state_is_tuple=True)
             outputs,_=tf.nn.dynamic_rnn(rnn_cell,embedding_inputs,dtype=tf.float32)
             output = tf.reshape(tf.concat(outputs, 1), [-1, self.config.hidden_size])
