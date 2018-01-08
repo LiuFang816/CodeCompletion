@@ -47,11 +47,11 @@ class LSTM(object):
             softmax_b = tf.get_variable("softmax_b", [self.config.vocab_size], tf.float32)
             logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
             # Reshape logits to be a 3-D tensor for sequence loss
-            logits = tf.reshape(logits, [self.config.batch_size, self.config.num_steps-1, self.config.vocab_size])
+            self.logits = tf.reshape(logits, [self.config.batch_size, self.config.num_steps-1, self.config.vocab_size])
             self.predict_class=tf.argmax(logits,2)
             # Use the contrib sequence loss and average over the batches
             loss = tf.contrib.seq2seq.sequence_loss(
-                logits,
+                self.logits,
                 self.label,
                 tf.ones([self.config.batch_size, self.config.num_steps-1], dtype=tf.float32),
                 average_across_timesteps=False,

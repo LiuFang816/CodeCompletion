@@ -106,8 +106,42 @@ def train(id_to_word):
                     break
             if flag:
                 break
-def test():
-    pass
+import json
+def test(save_path,N):
+    Config = tf.ConfigProto()
+    Config.gpu_options.allow_growth = True
+    with tf.Session(config=Config) as sess:
+        sess.run(tf.global_variables_initializer())
+        saver=tf.train.Saver()
+        saver.restore(sess,save_path)
+        test_loss,test_acc=evaluate(sess,test_inputs,test_labels)
+        msg='Test Loss:{0:>6.2}, Test Acc:{1:>7.2%}'
+        print(msg.format(test_loss,test_acc))
+        test_batch=data_reader.batch_iter(test_inputs,test_labels,config.batch_size)
+        with open(save_path,'w') as f:
+            for x_batch,y_batch in test_batch:
+                feed_dict=feed_data(x_batch,y_batch,config.dropout_keep_prob)
+                loss,acc,logits=sess.run([model.loss,model.acc,model.logits],feed_dict=feed_dict)
+                for i in range(config.batch_size):
+                    target=[]
+                    prediction=[]
+                    for j in range(config.num_steps-1):
+                        prediction.append([])
+                        target.append(logits[i][j])
+                        tmp = list(logits[i][j])
+                        for m in range(N):
+                            index=tmp.index(max(tmp))
+                            prediction[j].append(index)
+                            tmp[index]=-100
+
+                    target=json.dumps(target)
+                    # print(target)
+                    prediction=json.dumps(prediction)
+                    # print(prediction)
+                    f.write(target+'\n')
+                    f.write(prediction+'\n')
+
+
 
 if __name__ == '__main__':
     config=LSTMConfig()
@@ -122,4 +156,4 @@ if __name__ == '__main__':
     if MODE=='train':
         train(id_to_word)
     else:
-        test()
+        test('test.txt',1)

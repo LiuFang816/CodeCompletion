@@ -9,7 +9,7 @@ class LSTMConfig(object):
     hidden_size=64
     dropout_keep_prob=1.0
     learning_rate=0.5
-    batch_size=1 #无法并行
+    batch_size=1 #无法并行,因此只能为1
     num_epochs=50
     print_per_batch=100
     save_per_batch=50
@@ -30,12 +30,6 @@ class StackLSTM(object):
             return tf.contrib.rnn.BasicLSTMCell(self.config.hidden_size,state_is_tuple=True)
         def gru_cell():
             return tf.contrib.rnn.GRUCell(self.config.hidden_size)
-        def drop_out():
-            if self.config.rnn=='lstm':
-                cell=lstm_cell()
-            else:
-                cell=gru_cell()
-            return tf.contrib.rnn.DropoutWrapper(cell,output_keep_prob=self.config.dropout_keep_prob)
         with tf.device('/cpu:0'):
             embedding=tf.get_variable('embedding',[self.config.vocab_size,self.config.embedding_size])
             embedding_inputs=tf.nn.embedding_lookup(embedding,self.input)
@@ -104,6 +98,30 @@ class StackLSTM(object):
         def func_push(state):
             self.state_stack.push(state)
             return state[0][0],state[0][1],state[1][0],state[1][1]
+
+
+        def f_default(state):
+            return state,state
+
+        #-----------------特殊情况需要保留名称------------------
+        # def updateState(state,time_step):
+        #     # state = ((state[0][0], state[0][1]), (state[1][0],state[1][1]))
+        #
+        #     (out, newstate) = cell(inputs[:, time_step, :], state)
+        #     # print('------------------------------hhhhhh----------------------------')
+        #     tf.get_variable_scope().reuse_variables()
+        #     return newstate
+        # nameSet=[word_to_id['Import'],word_to_id['ClassDef'],word_to_id['FunctionDef'],word_to_id['Assign'],word_to_id['AsyncFunctionDef'],word_to_id['Attribute']]
+        # def func_push(state, time_step):
+        #     #add特殊情况需要保留名称
+        #     state,newState = tf.cond(tf.logical_or(
+        #         tf.logical_or(tf.equal(self._input_data[0][time_step-1], nameSet[0]), tf.equal(self._input_data[0][time_step-1], nameSet[1])),
+        #         tf.logical_or(tf.equal(self._input_data[0][time_step-1], nameSet[2]), tf.equal(self._input_data[0][time_step-1], nameSet[3])),
+        #     ),lambda: updateState(state, time_step), lambda: f_default(state))
+        #
+        #     self.state_stack.push(newState)
+        #     return state[0][0], state[0][1], state[1][0], state[1][1]
+        # #-------------------------------------------------------------
 
         def func_pop(time_step,state):
             (cell_output,state)=cell(inputs[:,time_step,:],state)
