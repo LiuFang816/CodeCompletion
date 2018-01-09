@@ -100,9 +100,6 @@ class StackLSTM(object):
             return state[0][0],state[0][1],state[1][0],state[1][1]
 
 
-        def f_default(state):
-            return state,state
-
         #-----------------特殊情况需要保留名称------------------
         # def updateState(state,time_step):
         #     # state = ((state[0][0], state[0][1]), (state[1][0],state[1][1]))
@@ -112,6 +109,9 @@ class StackLSTM(object):
         #     tf.get_variable_scope().reuse_variables()
         #     return newstate
         # nameSet=[word_to_id['Import'],word_to_id['ClassDef'],word_to_id['FunctionDef'],word_to_id['Assign'],word_to_id['AsyncFunctionDef'],word_to_id['Attribute']]
+        # def f_default(state):
+        #     return state,state
+        #
         # def func_push(state, time_step):
         #     #add特殊情况需要保留名称
         #     state,newState = tf.cond(tf.logical_or(
